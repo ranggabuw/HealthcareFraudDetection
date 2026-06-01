@@ -43,6 +43,15 @@ st.markdown("""
     }
 
     /* Header */
+    header[data-testid="stHeader"] {
+        background: transparent !important;
+        border-bottom: none !important;
+    }
+            
+    header[data-testid="stHeader"]::before {
+        display: none !important;
+    }
+    
     .hero-header {
         background: linear-gradient(90deg, rgba(0,200,255,0.08) 0%, rgba(0,120,200,0.05) 100%);
         border: 1px solid rgba(0,200,255,0.2);

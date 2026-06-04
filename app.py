@@ -274,6 +274,8 @@ st.markdown("""
 # ─────────────────────────────────────────────
 # Load Model
 # ─────────────────────────────────────────────
+st.write("Sklearn version:", sklearn.__version__)
+
 @st.cache_resource
 def load_model():
     """Load the trained pipeline from disk."""

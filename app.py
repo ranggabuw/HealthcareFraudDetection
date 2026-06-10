@@ -183,19 +183,43 @@ st.markdown("""
         color: #e0e8f0 !important;
     }
 
-    .stNumberInput input {
-        background: rgba(255,255,255,0.05) !important;
+    /* Wrapper/container number input */
+    div[data-baseweb="input"] > div {
+        background: rgba(255,255,255,0.01) !important;
         border-color: rgba(0,200,255,0.2) !important;
-        color: #000000 !important;
-        -webkit-text-fill-color: #000000 !important;
-        opacity: 1 !important;
+        color: #e0e8f0 !important;
+    }
+    
+    .stNumberInput > div > div {
+        background: rgba(255,255,255,0.04) !important;
+        border: 1px solid rgba(0,200,255,0.2) !important;
+        border-radius: 4px !important;
     }
 
-    .stNumberInput {
-    border: none !important;
-    box-shadow: none !important;
+    /* Input field di dalamnya */
+    .stNumberInput input {
+        background: transparent !important;
+        color: #e0e8f0 !important;
+        -webkit-text-fill-color: #e0e8f0 !important;
     }
-            
+
+    /* Tombol + dan - */
+    .stNumberInput button {
+        background: transparent !important;
+        border: none !important;
+        color: #e0e8f0 !important;
+    }
+
+    .stNumberInput button:hover {
+        background: rgba(0,200,255,0.1) !important;
+    }
+
+    .stDateInput > div > div {
+        background: rgba(255,255,255,0.04) !important;
+        border: 1px solid rgba(0,200,255,0.2) !important;
+        border-radius: 4px !important;
+    }
+
     /* Button */
     .stButton > button {
         background: linear-gradient(90deg, #0088cc, #00aaf0) !important;
@@ -274,7 +298,6 @@ st.markdown("""
 # ─────────────────────────────────────────────
 # Load Model
 # ─────────────────────────────────────────────
-st.write("Sklearn version:", sklearn.__version__)
 
 @st.cache_resource
 def load_model():
@@ -317,13 +340,13 @@ with st.sidebar:
     with col_a:
         st.markdown("""
         <div class='metric-box'>
-            <div class='metric-val'>89%</div>
+            <div class='metric-val'>98%</div>
             <div class='metric-lbl'>Accuracy</div>
         </div>""", unsafe_allow_html=True)
     with col_b:
         st.markdown("""
         <div class='metric-box'>
-            <div class='metric-val'>74%</div>
+            <div class='metric-val'>96%</div>
             <div class='metric-lbl'>Recall</div>
         </div>""", unsafe_allow_html=True)
 
@@ -332,31 +355,15 @@ with st.sidebar:
     with col_c:
         st.markdown("""
         <div class='metric-box'>
-            <div class='metric-val'>73%</div>
+            <div class='metric-val'>97%</div>
             <div class='metric-lbl'>Precision</div>
         </div>""", unsafe_allow_html=True)
     with col_d:
         st.markdown("""
         <div class='metric-box'>
-            <div class='metric-val'>73%</div>
+            <div class='metric-val'>96%</div>
             <div class='metric-lbl'>F1-Score</div>
         </div>""", unsafe_allow_html=True)
-
-    st.markdown("---")
-
-    if pipeline is None:
-        st.warning("⚠️ Model belum dimuat. Pastikan file `fraud_pipeline.pkl` ada.")
-    else:
-        st.success("✅ Model berhasil dimuat")
-
-    st.markdown("""
-    <p style='font-size:0.72rem;color:#4a7a9b;margin-top:32px'>
-    Top Feature:<br>
-    <b style='color:#00c8ff'>Days Between Service & Claim</b><br>
-    (importance: 56.4%)
-    </p>
-    """, unsafe_allow_html=True)
-
 
 # ─────────────────────────────────────────────
 # Main Content
@@ -399,7 +406,7 @@ with col_left:
     )
     chronic_condition_flag = 1 if "Yes" in chronic_condition else 0
 
-    st.markdown("<div class='card-background'>", unsafe_allow_html=True)
+    # st.markdown("<div class='card-background'>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
     # ── Provider & Insurance ─────────────────
@@ -450,11 +457,6 @@ with col_right:
     # ── Provider & Insurance ─────────────────
     st.markdown("<p class='card-title'>💵 Claim Submission</p>", unsafe_allow_html=True)
     # st.markdown("<div class='card-background'>", unsafe_allow_html=True)
-    claim_amount = st.number_input(
-        "Claim Amount (IDR)",
-        min_value=0.0, max_value=1000000000000000.0, value=150000.0, step=1000.0,
-        help="Total nilai klaim yang diajukan"
-    )
 
     days_between = st.number_input(
         "Days Between Service & Claim",
@@ -462,11 +464,20 @@ with col_right:
         help="Selisih hari antara layanan dan pengajuan klaim"
     )
 
-    submission_date = st.date_input(
-        "Claim Submission Date",
-        value=date.today(),
-        help="Tanggal pengajuan klaim"
-    )
+    c5, c6 = st.columns(2)
+    with c5:
+        claim_amount = st.number_input(
+            "Claim Amount (IDR)",
+            min_value=0.0, max_value=1000000000000000.0, value=150000.0, step=1000.0,
+            help="Total nilai klaim yang diajukan"
+        )
+
+    with c6:
+        submission_date = st.date_input(
+            "Claim Submission Date",
+            value=date.today(),
+            help="Tanggal pengajuan klaim"
+        )
     st.markdown("</div>", unsafe_allow_html=True)
 
     # ── Predict Button ───────────────────────

@@ -443,11 +443,19 @@ with col_left:
         )
 
     with c6:
-        length_of_stay = st.number_input(
-            "Length of Stay (days)",
-            min_value=0, max_value=365, value=0,
-            help="Lama rawat inap (0 = rawat jalan)"
-        )
+        if visit_type == "Outpatient":
+            length_of_stay = st.number_input(
+                "Length of Stay (days)",
+                min_value=0, max_value=365, value=0,
+                disabled=True,
+                help="Lama rawat inap (0 = rawat jalan)"
+            )
+        else:
+            length_of_stay = st.number_input(
+                "Length of Stay (days)",
+                min_value=1, max_value=365, value=1,
+                help="Lama rawat inap (0 = rawat jalan)"
+            )
 
     st.markdown("</div>", unsafe_allow_html=True)
 

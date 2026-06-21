@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 import joblib
 import os
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 
 # ─────────────────────────────────────────────
 # Page Config
@@ -378,7 +378,7 @@ st.markdown("""
 # ─────────────────────────────────────────────
 # Input Form
 # ─────────────────────────────────────────────
-col_left, col_right = st.columns([1.1, 0.9], gap="large")
+col_left, col_right = st.columns([0.9, 1.1], gap="large")
 
 with col_left:
     # ── Patient Info ──────────────────────────
@@ -412,45 +412,43 @@ with col_left:
     # ── Provider & Insurance ─────────────────
     st.markdown("<p class='card-title'>🏨 Provider & Insurance</p>", unsafe_allow_html=True)
 
-    insurance_type = st.selectbox(
-        "Insurance Type",
-        options=["Medicaid", "Self-Pay", "Medicare", "Private"],
-        help="Jenis asuransi yang digunakan"
-    )
-
-    provider_specialty = st.selectbox(
-        "Provider Specialty",
-        options=[
-            "Internal Medicine",
-            "General Practice",
-            "Orthopedics",
-            "Neurology",
-            "Cardiology",
-            "Pulmonology"
-        ],
-        help="Spesialisasi penyedia layanan kesehatan"
-    )
-
     c3, c4 = st.columns(2)
     with c3:
+        insurance_type = st.selectbox(
+            "Insurance Type",
+            options=["Medicaid", "Self-Pay", "Medicare", "Private"],
+            help="Jenis asuransi yang digunakan"
+        )
+    
+    with c4:
+        provider_specialty = st.selectbox(
+            "Provider Specialty",
+            options=[
+                "Internal Medicine",
+                "General Practice",
+                "Orthopedics",
+                "Neurology",
+                "Cardiology",
+                "Pulmonology"
+            ],
+            help="Spesialisasi penyedia layanan kesehatan"
+        )
+
+    c5, c6 = st.columns(2)
+    with c5:
         visit_type = st.selectbox(
             "Visit Type",
             options=["Outpatient", "Emergency", "Inpatient"],
             help="Jenis kunjungan pasien"
         )
 
-    with c4:
+    with c6:
         length_of_stay = st.number_input(
             "Length of Stay (days)",
             min_value=0, max_value=365, value=0,
             help="Lama rawat inap (0 = rawat jalan)"
         )
 
-    num_claims_monthly = st.number_input(
-        "Number of Claims Per Provider (Monthly)",
-        min_value=0, max_value=1000, value=50,
-        help="Jumlah klaim bulanan dari provider ini"
-    )
     st.markdown("</div>", unsafe_allow_html=True)
 
 with col_right:
@@ -458,26 +456,36 @@ with col_right:
     st.markdown("<p class='card-title'>💵 Claim Submission</p>", unsafe_allow_html=True)
     # st.markdown("<div class='card-background'>", unsafe_allow_html=True)
 
-    days_between = st.number_input(
-        "Days Between Service & Claim",
-        min_value=0, max_value=365, value=10,
-        help="Selisih hari antara layanan dan pengajuan klaim"
-    )
+    c7, c8 = st.columns(2)
+    with c7:
+        service_date = st.date_input(
+            "Service Date",
+            value=date.today() - timedelta(days=30),
+            help="Tanggal pelayanan"
+        )
 
-    c5, c6 = st.columns(2)
-    with c5:
+    with c8:
+        submission_date = st.date_input(
+            "Claim Submission Date",
+            value=date.today(),
+            help="Tanggal pengajuan klaim"
+        )
+
+    c9, c10 = st.columns(2)
+    with c9:
         claim_amount = st.number_input(
             "Claim Amount (IDR)",
             min_value=0.0, max_value=1000000000000000.0, value=150000.0, step=1000.0,
             help="Total nilai klaim yang diajukan"
         )
 
-    with c6:
-        submission_date = st.date_input(
-            "Claim Submission Date",
-            value=date.today(),
-            help="Tanggal pengajuan klaim"
+    with c10:
+        approved_amount = st.number_input(
+            "Approved Amount (IDR)",
+            min_value=0.0, max_value=1000000000000000.0, value=150000.0, step=1000.0,
+            help="Total nilai klaim yang disetujui"
         )
+
     st.markdown("</div>", unsafe_allow_html=True)
 
     # ── Predict Button ───────────────────────
@@ -490,16 +498,14 @@ with col_right:
         input_data = pd.DataFrame({
             "Patient_Age": [patient_age],
             "Patient_Gender": [patient_gender],
-            "Claim_Amount": [claim_amount],
+            "Claim_Approval_Ratio": [approved_amount] / ([claim_amount] + 1),
+            "Claim_Amount_Diff": [claim_amount] - [approved_amount],
             "Insurance_Type": [insurance_type],
-            "Days_Between_Service_and_Claim": [days_between],
-            "Number_of_Claims_Per_Provider_Monthly": [num_claims_monthly],
+            "Days_Between_Service_and_Claim": [service_date] - [submission_date],
             "Provider_Specialty": [provider_specialty],
             "Length_of_Stay": [length_of_stay],
             "Visit_Type": [visit_type],
             "Chronic_Condition_Flag": [chronic_condition_flag],
-            "Claim_Submission_mth": [submission_date.month],
-            "Claim_Submission_yr": [submission_date.year],
         })
 
         if pipeline is not None:
@@ -566,7 +572,7 @@ with col_right:
 
             # Demo mode
             st.markdown("**[Demo Mode — tanpa model]**")
-            demo_risk = min(1.0, (days_between / 30) * 0.4 + (claim_amount / 10000) * 0.3 + (0.3 if insurance_type == "Self-Pay" else 0.1))
+            demo_risk = min(1.0, ((service_date - submission_date) / 30) * 0.4 + (claim_amount / 10000) * 0.3 + (0.3 if insurance_type == "Self-Pay" else 0.1))
             if demo_risk > 0.5:
                 st.markdown(f"""
                 <div class='result-fraud'>
